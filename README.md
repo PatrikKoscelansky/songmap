@@ -1,7 +1,7 @@
-#Song map API
+# Song map API
 Description coming soon..
 
-##Secrets
+## Secrets
 In order for project to work, you need to create a python file named **secrets.py**, which must contain these variables 
 with your own values: <br>
     
@@ -15,7 +15,7 @@ Generate your own SECRET_KEY_HASH with:
 Never push any secret values to the repository.
 
 
-##Database requirements
+## Database requirements
 - Postgre
 - DB name must follow this: 
 
