@@ -22,6 +22,7 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
 
 
 def create_user(db: Session, user: schemas.UserCreate):
+    # TODO: CHECK if user already exists
     password_hash = auth.get_password_hash(user.password)
     db_user = models.User(username=user.username, email=user.email, hashed_password=password_hash)
     db.add(db_user)
@@ -46,6 +47,14 @@ def create_songs(db: Session, songs: List[schemas.SongCreate]):
         db_song = create_song(db, song)
         db_songs.append(db_song)
     return db_songs
+
+
+def get_song(db: Session, song_id: int):
+    return db.query(models.Song).filter(models.Song.id == song_id).first()
+
+
+def get_song_by_spotifyid(db: Session, spotify_id: str):
+    return db.query(models.Song).filter(models.Song.spotify_id == spotify_id).first()
 
 
 # TODO: consider creating also song here

@@ -2,6 +2,7 @@ from typing import List
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from fastapi.responses import HTMLResponse
 from . import crud, models, schemas, auth
 from .database import SessionLocal, engine
 import logging
@@ -40,6 +41,11 @@ def check_if_authorized(owner_id, current_id):
 # TODO: SHOULD DO LATER
 #  increment user's approval_ratio when someone likes his song point - AS A BACKGROUND TASK
 
+# @app.get("/hello/")
+# def hello():
+#     return {
+#         'hello': 'world'
+#     }
 
 @app.post("/token/", response_model=schemas.Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -86,6 +92,31 @@ def create_songs(
     return crud.create_songs(db=db, songs=songs)
 
 
+@app.get("/songs/", response_model=schemas.Song)
+def read_song(song_id: int, token: str = Depends(auth.oauth2_scheme), db: Session = Depends(get_db)):
+    auth.get_current_user(token, db)
+    db_song = crud.get_song(db=db, song_id=song_id)
+    if db_song is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Song with given id does not exist.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return db_song
+
+
+@app.get("/songs/spotify/", response_model=schemas.Song)
+def read_song_by_spotifyid(spotify_id: str, token: str = Depends(auth.oauth2_scheme), db: Session = Depends(get_db)):
+    auth.get_current_user(token, db)
+    db_song = crud.get_song_by_spotifyid(db=db, spotify_id=spotify_id)
+    if db_song is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Song with given spotify_id does not exist.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return db_song
+
 # SONG POINT
 
 @app.post("/users/{owner_id}/songpoints/", response_model=schemas.SongPointResp)
@@ -99,15 +130,15 @@ def create_song_point_for_user(
     return crud.create_song_point_for_user(db=db, song_point=song_point, owner_id=owner_id)
 
 
-@app.post("/users/{owner_id}/songpoints/", response_model=List[schemas.SongPointCreate])
-def create_song_points_for_user(
-        owner_id: int,
-        song_points: List[schemas.SongPointCreate],
-        token: str = Depends(auth.oauth2_scheme),
-        db: Session = Depends(get_db)
-):
-    check_if_authorized(owner_id, auth.get_current_user(token, db).id)
-    return crud.create_song_points_for_user(db=db, song_points=song_points, owner_id=owner_id)
+# @app.post("/users/{owner_id}/songpoints/", response_model=List[schemas.SongPointCreate])
+# def create_song_points_for_user(
+#         owner_id: int,
+#         song_points: List[schemas.SongPointCreate],
+#         token: str = Depends(auth.oauth2_scheme),
+#         db: Session = Depends(get_db)
+# ):
+#     check_if_authorized(owner_id, auth.get_current_user(token, db).id)
+#     return crud.create_song_points_for_user(db=db, song_points=song_points, owner_id=owner_id)
 
 
 # TRACK
@@ -191,3 +222,17 @@ def read_song_points_and_tracks_within_radius(
         skip=skip,
         limit=limit
     )
+
+
+@app.get("/spotify_auth_callback/", response_class=HTMLResponse)
+def spotify_auth_callback():
+    return """
+        <html>
+            <head>
+                <title>Spotify authorization flow</title>
+            </head>
+            <body>
+                <h1>You can now go back to your app.</h1>
+            </body>
+        </html>
+        """
