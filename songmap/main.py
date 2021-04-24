@@ -72,14 +72,14 @@ def read_user(user_id: int, token: str = Depends(auth.oauth2_scheme), db: Sessio
 
 # SONG
 
-@app.post("/songs/", response_model=schemas.Song)
-def create_song(
-        song: schemas.SongCreate,
-        token: str = Depends(auth.oauth2_scheme),
-        db: Session = Depends(get_db)
-):
-    auth.get_current_user(token, db)
-    return crud.create_song(db=db, song=song)
+# @app.post("/songs/", response_model=schemas.Song)
+# def create_song(
+#         song: schemas.SongCreate,
+#         token: str = Depends(auth.oauth2_scheme),
+#         db: Session = Depends(get_db)
+# ):
+#     auth.get_current_user(token, db)
+#     return crud.create_song(db=db, song=song)
 
 
 @app.post("/songs/", response_model=List[schemas.Song])
@@ -119,26 +119,36 @@ def read_song_by_spotifyid(spotify_id: str, token: str = Depends(auth.oauth2_sch
 
 # SONG POINT
 
-@app.post("/users/{owner_id}/songpoints/", response_model=schemas.SongPointResp)
-def create_song_point_for_user(
-        owner_id: int,
-        song_point: schemas.SongPointCreate,
-        token: str = Depends(auth.oauth2_scheme),
-        db: Session = Depends(get_db)
-):
-    check_if_authorized(owner_id, auth.get_current_user(token, db).id)
-    return crud.create_song_point_for_user(db=db, song_point=song_point, owner_id=owner_id)
-
-
-# @app.post("/users/{owner_id}/songpoints/", response_model=List[schemas.SongPointCreate])
-# def create_song_points_for_user(
+# @app.post("/users/{owner_id}/songpoints/", response_model=schemas.SongPointResp)
+# def create_song_point_for_user(
 #         owner_id: int,
-#         song_points: List[schemas.SongPointCreate],
+#         song_point: schemas.SongPointCreate,
 #         token: str = Depends(auth.oauth2_scheme),
 #         db: Session = Depends(get_db)
 # ):
 #     check_if_authorized(owner_id, auth.get_current_user(token, db).id)
-#     return crud.create_song_points_for_user(db=db, song_points=song_points, owner_id=owner_id)
+#     return crud.create_song_point_for_user(db=db, song_point=song_point, owner_id=owner_id)
+
+
+@app.post("/users/me/songpoints/", response_model=List[schemas.SongPointResp])
+def create_song_points_for_user(
+        song_points: List[schemas.SongPointCreate],
+        token: str = Depends(auth.oauth2_scheme),
+        db: Session = Depends(get_db)
+):
+    user_in_db = auth.get_current_user(token, db)
+    return crud.create_song_points_for_user(db=db, song_points=song_points, owner_id=user_in_db.id)
+
+
+@app.post("/users/{owner_id}/songpoints/", response_model=List[schemas.SongPointResp])
+def create_song_points_for_user(
+        owner_id: int,
+        song_points: List[schemas.SongPointCreate],
+        token: str = Depends(auth.oauth2_scheme),
+        db: Session = Depends(get_db)
+):
+    check_if_authorized(owner_id, auth.get_current_user(token, db).id)
+    return crud.create_song_points_for_user(db=db, song_points=song_points, owner_id=owner_id)
 
 
 # TRACK
