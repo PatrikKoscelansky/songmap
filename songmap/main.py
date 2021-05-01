@@ -30,22 +30,9 @@ def check_if_authorized(owner_id, current_id):
         )
 
 
-# TODO: MUST HAVE
-#  create new user by REGISTRATION ... withou disabled key
-#  passwords and everything into secret file, not pushed to git
-#  REFACTOR
-#  authentication and authorisation
-#  do not use id, but name for user
-#  instead of auth.get_current_user(token, db) ... implement some faster function that only checks token in db
-
-# TODO: SHOULD DO LATER
+# TODO:
 #  increment user's approval_ratio when someone likes his song point - AS A BACKGROUND TASK
 
-# @app.get("/hello/")
-# def hello():
-#     return {
-#         'hello': 'world'
-#     }
 
 @app.post("/token/", response_model=schemas.Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -66,7 +53,7 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
 @app.get("/users/{user_id}/", response_model=schemas.User)
 def read_user(user_id: int, token: str = Depends(auth.oauth2_scheme), db: Session = Depends(get_db)):
-    auth.get_current_user(token, db) # sometimes only checking if logged in
+    auth.get_current_user(token, db)  # sometimes only checking if logged in
     return crud.get_user(db=db, user_id=user_id)
 
 
@@ -117,6 +104,7 @@ def read_song_by_spotifyid(spotify_id: str, token: str = Depends(auth.oauth2_sch
         )
     return db_song
 
+
 # SONG POINT
 
 # @app.post("/users/{owner_id}/songpoints/", response_model=schemas.SongPointResp)
@@ -155,11 +143,11 @@ def create_song_points_for_user(
 
 @app.post("/users/{owner_id}/tracks/", response_model=schemas.TrackResp)
 def create_track_w_song_points_for_user(
-    owner_id: int,
-    track: schemas.TrackCreate,
-    song_points: List[schemas.SongPointCreate],
-    token: str = Depends(auth.oauth2_scheme),
-    db: Session = Depends(get_db)
+        owner_id: int,
+        track: schemas.TrackCreate,
+        song_points: List[schemas.SongPointCreate],
+        token: str = Depends(auth.oauth2_scheme),
+        db: Session = Depends(get_db)
 ):
     check_if_authorized(owner_id, auth.get_current_user(token, db).id)
     return crud.create_track_w_song_points_for_user(
@@ -215,13 +203,13 @@ def read_song_points_and_tracks_by_user(
 
 @app.get("/sat/", response_model=schemas.SongPointsAndTracksResp)
 def read_song_points_and_tracks_within_radius(
-    longitude: float,
-    latitude: float,
-    radius: int = 50,
-    skip: int = 0,
-    limit: int = 100,
-    token: str = Depends(auth.oauth2_scheme),
-    db: Session = Depends(get_db)
+        longitude: float,
+        latitude: float,
+        radius: int = 50,
+        skip: int = 0,
+        limit: int = 100,
+        token: str = Depends(auth.oauth2_scheme),
+        db: Session = Depends(get_db)
 ):
     auth.get_current_user(token, db)
     return crud.get_song_points_and_tracks_within_radius(
